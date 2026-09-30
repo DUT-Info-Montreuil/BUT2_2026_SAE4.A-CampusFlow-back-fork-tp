@@ -11,18 +11,16 @@ exports et statistiques. Projet étudiant BUT2 SAÉ 4.A (Lay, Quemener, Cai). Le
 - Pydantic v2 pour les DTO, python-dotenv pour la config
 
 ## Structure
-Tout le code est dans `BUT2_2026_SAE4.A-LayQuemenerCai-back/` (le dépôt racine contient aussi
-`DocumentsARendre/` : journal technique et RGPD en PDF).
+Code dans `BUT2_2026_SAE4.A-LayQuemenerCai-back/` ; `DocumentsARendre/` : journal technique et RGPD (PDF).
 - `app.py` — point d'entrée Flask, CORS, enregistrement des blueprints, appel de `init_db()`
 - `init_db.py` — création des tables (`CREATE TABLE IF NOT EXISTS`) : visiteurs, evenements,
   formations_iut, choix_formations_visees, evenements_participes
-- `database.py` — `get_db()` / `close_db()` (connexion SQLite dans `flask.g`, clés étrangères activées)
-- `Token.py` — jetons d'authentification admin en mémoire (liste de classe, perdus au redémarrage)
+- `database.py` — `get_db()` / `close_db()` (SQLite dans `flask.g`, clés étrangères activées)
+- `Token.py` — jetons admin en mémoire (perdus au redémarrage)
 - `controllers/` — routes (`/visiteurs`, `/config`) : `visiteurs_controller`, `config_controller`
 - `services/` — logique métier ; `repository/` — requêtes SQL ; `mappers/` — BDD ↔ DTO/JSON front
-- `dtos/` — modèles Pydantic (`Creer*DTO` pour l'entrée, `Get*DTO` pour la sortie)
-
-Flux : controller → service → repository (+ mapper/DTO au passage).
+- `dtos/` — modèles Pydantic (`Creer*DTO` entrée, `Get*DTO` sortie)
+Flux : controller → service → repository (+ mapper/DTO).
 
 ## Installation
 ```bash
@@ -34,30 +32,29 @@ cp .env.exemple .env   # puis renseigner PASSWORD, DATABASE (chemin du .db), COR
 
 ## Lancement
 ```bash
-flask --app app run    # ou : python app.py  (http://127.0.0.1:5000)
+flask --app app run    # ou : python app.py (http://127.0.0.1:5000) ; tables créées par init_db()
 ```
-Les tables sont créées automatiquement au démarrage (`init_db()`).
 
 ## Tests
-Aucun test automatisé dans le dépôt pour l'instant. Vérification manuelle des routes (curl,
-Postman…) ; `GET /` renvoie `CampusFlow`.
+Aucun test automatisé. Vérification manuelle des routes (curl, Postman) ; `GET /` renvoie `CampusFlow`.
 
 ## Conventions observées
-- Architecture en couches controller / service / repository / mapper / dto.
 - Noms en français (visiteurs, evenement, formation, lycée…) ; fichiers en `snake_case`
   (`visiteurs_service.py`), sauf DTO en PascalCase (`CreerVisiteursDTO.py`) et `Token.py`.
 - Colonnes SQL en `snake_case` ; JSON envoyé au front en camelCase partiel (`codePostal`, `niveau_etudes`).
 - Chaque fonction est précédée d'un docstring-bloc en français placé avant le `def`.
-- Routes : `GET/POST/DELETE` sur la collection, `GET/PUT/DELETE /<int:id>` sur un élément ;
-  `/visiteurs/export`, `/visiteurs/stat/...`, `/config/authentificate|logout|modif-password`.
-- Configuration via `.env` (jamais commité ; `.env.exemple` sert de modèle).
 
 ## Règles de travail
 - Ne pas commiter les fichiers secrets (`.env`, etc.).
 - Pour chaque nouvelle fonctionnalité majeure, créer une nouvelle branche.
 - N'importer aucune nouvelle librairie sans informer de son ajout.
+- Travailler dans un seul périmètre à la fois (front ou back). Ne lire ni les dépendances installées
+  (`.venv`, `node_modules`), ni les fichiers de verrouillage, ni les données, logs ou fichiers générés
+  (`*.db`, `temporaire/`, `__pycache__/`).
+- Front et back communiquent via `docs/API.md` : s'y référer plutôt que lire l'autre partie du projet.
+  Toute modification d'une route met ce fichier à jour.
+- Ce fichier reste général ; les règles propres à chaque partie sont dans le `CLAUDE.md` de son dossier.
 
 ## Points d'attention
 - `__pycache__/` est versionné alors qu'il devrait être ignoré ; le `.gitignore` de la racine
   préfixe mal le chemin de `.venv`.
-- Ne pas versionner `.env` ni la base SQLite (données personnelles, cf. RGPD).
